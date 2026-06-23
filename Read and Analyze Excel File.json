@@ -1,0 +1,219 @@
+{
+  "name": "Read and Analyze Excel File",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "5249bc90-cf58-4f62-b4d8-7eaf6f9d0149",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "fileId": "={{ $json.id }}"
+      },
+      "type": "n8n-nodes-base.microsoftOneDrive",
+      "typeVersion": 1.1,
+      "position": [
+        416,
+        0
+      ],
+      "id": "37187c11-a69f-4707-8bca-6e1fd313ac20",
+      "name": "Get a file",
+      "credentials": {
+        "microsoftOneDriveOAuth2Api": {
+          "id": "dAIluB4oSRT21itM",
+          "name": "Microsoft Drive account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json['@microsoft.graph.downloadUrl'] }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        624,
+        0
+      ],
+      "id": "97412ac9-1ee1-4b1c-ab3c-780188048b55",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "={{ $json.data }}\n\nAnalyze this CSV data and respond in clean HTML format suitable for an email body. Use <h3> for section headers, <table> for any metrics/numbers, and <p> for summary text. Do not use markdown syntax (no **, no ###, no ---) — output valid HTML only."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        832,
+        0
+      ],
+      "id": "29c36530-a4c6-442d-ac5c-b2a9e88b3ce6",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "Cy8fcdKZ4YA2xuIC",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toRecipients": "enpa.silan@wellous.com",
+        "subject": "This is test email",
+        "bodyContent": "={{ $json.content.parts[0].text }}",
+        "additionalFields": {
+          "bodyContentType": "html"
+        }
+      },
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        1184,
+        0
+      ],
+      "id": "1a010ac8-66b9-45bc-be44-1cd7db09298e",
+      "name": "Send a message",
+      "webhookId": "6de5d388-cff5-4e71-a992-a79f4d174771",
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "q1lwL6bKQ5GFythY",
+          "name": "Microsoft Outlook account 13"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "query": "copilot-feedback.csv"
+      },
+      "type": "n8n-nodes-base.microsoftOneDrive",
+      "typeVersion": 1.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "9bca711b-797d-440c-89c7-e94c12c911d8",
+      "name": "Search a file",
+      "credentials": {
+        "microsoftOneDriveOAuth2Api": {
+          "id": "dAIluB4oSRT21itM",
+          "name": "Microsoft Drive account 5"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Search a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a file": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search a file": {
+      "main": [
+        [
+          {
+            "node": "Get a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "ae844280-d2fa-4d74-a6c5-43acffb1ca7b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f49159c21ab5a52e4d6290bb1958fd85b4936ef476cf70a200aeb6ab971fce1a"
+  },
+  "nodeGroups": [],
+  "id": "F7fCYNthXz2j7pQj",
+  "tags": [
+    {
+      "updatedAt": "2026-06-22T07:17:47.924Z",
+      "createdAt": "2026-06-22T07:17:47.924Z",
+      "id": "HHJAeC4fCzwMRkNf",
+      "name": "templates"
+    },
+    {
+      "updatedAt": "2026-06-19T08:04:47.324Z",
+      "createdAt": "2026-06-19T08:04:47.324Z",
+      "id": "JWL4S769DcPBZu2K",
+      "name": "demo"
+    }
+  ]
+}

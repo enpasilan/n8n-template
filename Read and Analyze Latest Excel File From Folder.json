@@ -1,0 +1,223 @@
+{
+  "name": "Read and Analyze Latest Excel File From Folder",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "30049d8a-2318-4fdc-a79a-a52b0188055d",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.value[0]['@microsoft.graph.downloadUrl'] }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        704,
+        0
+      ],
+      "id": "50528629-85e5-4a29-a3dd-35c5898c7e0f",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "={{ $json.data }}\n\nAnalyze this CSV data and respond in clean HTML format and also insert a pie chart as image suitable for an email body. Use <h3> for section headers, <table> for any metrics/numbers, and <p> for summary text. Do not use markdown syntax (no **, no ###, no ---) — output valid HTML only."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        960,
+        0
+      ],
+      "id": "e6d8c570-a3c8-442f-b257-c648d59425de",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "Cy8fcdKZ4YA2xuIC",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toRecipients": "enpa.silan@wellous.com",
+        "subject": "This is test email",
+        "bodyContent": "={{ $json.content.parts[0].text }}",
+        "additionalFields": {
+          "bodyContentType": "html"
+        }
+      },
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        1376,
+        0
+      ],
+      "id": "655ef971-9e56-42cb-bd78-f4c8ad8e8dcd",
+      "name": "Send a message",
+      "webhookId": "3c65d0ea-2316-4d37-9660-39846ac27ba7",
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "q1lwL6bKQ5GFythY",
+          "name": "Microsoft Outlook account 13"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "operation": "search",
+        "query": "n8n test folders"
+      },
+      "type": "n8n-nodes-base.microsoftOneDrive",
+      "typeVersion": 1.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "a3c92579-6ab0-418b-ba0c-e089345e3b2d",
+      "name": "Search a folder",
+      "credentials": {
+        "microsoftOneDriveOAuth2Api": {
+          "id": "dAIluB4oSRT21itM",
+          "name": "Microsoft Drive account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "= https://graph.microsoft.com/v1.0/me/drive/items/{{ $json.id }}/children?$orderby=lastModifiedDateTime desc&$top=1",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "microsoftOneDriveOAuth2Api",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        448,
+        0
+      ],
+      "id": "548c4568-6a2c-4333-b07a-91a4ba3dc1e1",
+      "name": "HTTP Request1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "microsoftOneDriveOAuth2Api": {
+          "id": "dAIluB4oSRT21itM",
+          "name": "Microsoft Drive account 5"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Search a folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search a folder": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "06fd0b30-34d0-4299-b849-04c2c72db13f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f49159c21ab5a52e4d6290bb1958fd85b4936ef476cf70a200aeb6ab971fce1a"
+  },
+  "nodeGroups": [],
+  "id": "MyXMEyI2bkJwFk6X",
+  "tags": [
+    {
+      "updatedAt": "2026-06-19T08:04:47.324Z",
+      "createdAt": "2026-06-19T08:04:47.324Z",
+      "id": "JWL4S769DcPBZu2K",
+      "name": "demo"
+    },
+    {
+      "updatedAt": "2026-06-22T07:17:47.924Z",
+      "createdAt": "2026-06-22T07:17:47.924Z",
+      "id": "HHJAeC4fCzwMRkNf",
+      "name": "templates"
+    }
+  ]
+}
