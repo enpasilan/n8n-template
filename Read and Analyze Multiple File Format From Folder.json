@@ -1,0 +1,650 @@
+{
+  "name": "Read and Analyze Multiple File Format From Folder",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "4e64b1de-45c3-400e-9188-a4bc62259d59",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "toRecipients": "enpa.silan@wellous.com",
+        "subject": "This is test email",
+        "bodyContent": "={{ $json.htmlBody }}",
+        "additionalFields": {
+          "bodyContentType": "html"
+        }
+      },
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        3024,
+        -128
+      ],
+      "id": "f8616752-2799-4bca-8715-88f7849fd94d",
+      "name": "Send a message",
+      "webhookId": "3029d5cb-60e5-4a74-ad16-856d54533be8",
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "q1lwL6bKQ5GFythY",
+          "name": "Microsoft Outlook account 13"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "operation": "search",
+        "query": "n8n test folders"
+      },
+      "type": "n8n-nodes-base.microsoftOneDrive",
+      "typeVersion": 1.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "86876f01-ddd7-4c4c-be59-5bf26af53153",
+      "name": "Search a folder",
+      "credentials": {
+        "microsoftOneDriveOAuth2Api": {
+          "id": "dAIluB4oSRT21itM",
+          "name": "Microsoft Drive account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "= https://graph.microsoft.com/v1.0/me/drive/items/{{ $json.id }}/children?$orderby=name asc&$top=100",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "microsoftOneDriveOAuth2Api",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        448,
+        0
+      ],
+      "id": "f0ef2430-4439-4fe9-a9a8-ad4fbdac00b8",
+      "name": "HTTP Request1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "microsoftOneDriveOAuth2Api": {
+          "id": "dAIluB4oSRT21itM",
+          "name": "Microsoft Drive account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "value",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        656,
+        0
+      ],
+      "id": "b6195764-1ba9-4bf3-a3ab-9595b624cf2a",
+      "name": "Split Out",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.name.split('.').pop().toLowerCase() }}",
+                    "rightValue": "pdf",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "4364fe4a-5759-47c2-8f77-5dedbc2c5ba2"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "PDF"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "cf795d7d-3266-45c3-b7c2-e56b5bb0237c",
+                    "leftValue": "={{ $json.name.split('.').pop().toLowerCase() }}",
+                    "rightValue": "^(jpg|jpeg|png|gif|webp)$",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Image"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "323690ae-dd30-474b-988a-f42c547b89e5",
+                    "leftValue": "={{ $json.name.split('.').pop().toLowerCase() }}",
+                    "rightValue": "csv",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "CSV"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "none"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        864,
+        0
+      ],
+      "id": "567df433-6057-4170-bd4e-80eaaae79c42",
+      "name": "Switch",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2080,
+        -144
+      ],
+      "id": "39a4157a-ac51-4aa5-96fd-ab5b9385f36e",
+      "name": "Merge",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "files",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        2352,
+        -128
+      ],
+      "id": "6a2c739c-f757-4d3e-bf67-75d1334f6645",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "jsCode": "function markdownToHtml(text) {\n  if (!text) return '<em>No analysis available</em>';\n\n  let html = text;\n\n  // Headers (###, ##, #) → <h4>, <h3>, <h4> for email-friendly sizing\n  html = html.replace(/^### (.*$)/gim, '<h4>$1</h4>');\n  html = html.replace(/^## (.*$)/gim, '<h4>$1</h4>');\n  html = html.replace(/^# (.*$)/gim, '<h3>$1</h3>');\n\n  // Bold: **text**\n  html = html.replace(/\\*\\*(.+?)\\*\\*/g, '<strong>$1</strong>');\n\n  // Bullet points: lines starting with \"* \" or \"- \"\n  html = html.replace(/^\\* (.*$)/gim, '<li>$1</li>');\n  html = html.replace(/^- (.*$)/gim, '<li>$1</li>');\n  html = html.replace(/(<li>.*<\\/li>)/gims, '<ul>$1</ul>');\n\n  // Horizontal rules: --- or lone newlines used as separators\n  html = html.replace(/^---$/gim, '');\n\n  // Remaining double newlines → paragraph breaks\n  html = html.replace(/\\n\\n/g, '</p><p>');\n  html = html.replace(/\\n/g, '<br>');\n\n  return `<p>${html}</p>`;\n}\n\nconst files = $input.first().json.files;\nlet html = '<h2>File Analysis Summary</h2>';\nfor (const file of files) {\n  const name = file.fileName || 'Unknown file';\n  const analysisHtml = markdownToHtml(file.analysis);\n  html += `<h3>${name}</h3>${analysisHtml}<hr>`;\n}\nreturn [{ json: { htmlBody: html } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2624,
+        -128
+      ],
+      "id": "f337cbb1-ef88-4b5e-9abc-6af8c3f67331",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "resource": "document",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-pro",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-pro"
+        },
+        "text": "Summarize the key contents of this document in 3-5 bullet points.",
+        "documentUrls": "={{ $json['@microsoft.graph.downloadUrl'] }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        1136,
+        -16
+      ],
+      "id": "0d6adc30-e7a4-4f75-9a78-40520843419a",
+      "name": "Analyze document",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "Cy8fcdKZ4YA2xuIC",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "59cc0086-5f1e-4e78-8b72-0a3382b211d4",
+              "name": "fileName",
+              "value": "={{ $('Split Out').item.json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "eff8ea9b-7b8e-43f9-bd48-52568fd123d1",
+              "name": "analysis",
+              "value": "={{ $json.content.parts[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1728,
+        -16
+      ],
+      "id": "a1a63b3e-5d97-4b11-898f-3ea4b1c6fd6a",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-pro",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-pro"
+        },
+        "text": "Describe what's in this image, including any text, branding, or key visual elements.",
+        "imageUrls": "={{ $json['@microsoft.graph.downloadUrl'] }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        1136,
+        192
+      ],
+      "id": "06eb656e-51cd-4e60-b28d-acf4879efaae",
+      "name": "Analyze an image",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "Cy8fcdKZ4YA2xuIC",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d5ba1603-33d2-4ecd-a168-cd1aad98d9c8",
+              "name": "=fileName",
+              "value": "={{ $('Split Out').item.json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "9dd8d8d6-3261-4d63-948e-039161c20cce",
+              "name": "analysis",
+              "value": "={{ $json.content.parts[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1712,
+        192
+      ],
+      "id": "7b128e11-8018-44ef-bf6d-57b6d1ede131",
+      "name": "Edit Fields1",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "url": "={{ $json['@microsoft.graph.downloadUrl'] }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "microsoftOutlookOAuth2Api",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1152,
+        496
+      ],
+      "id": "9e606f30-9738-492e-975f-d19d7071dae4",
+      "name": "HTTP Request2",
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "q1lwL6bKQ5GFythY",
+          "name": "Microsoft Outlook account 13"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-pro",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-pro"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Analyze this CSV data and summarize key findings:\\n\\n{{ $json.data }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        1360,
+        496
+      ],
+      "id": "612d54c3-b420-42bc-adfb-932347a8ab11",
+      "name": "Message a model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "Cy8fcdKZ4YA2xuIC",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d07c2b5e-47a7-4e8d-a917-b7c0dd2c092f",
+              "name": "=fileName",
+              "value": "={{ $('Split Out').item.json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "b392c2cc-f540-4978-8f37-844974b2e9ec",
+              "name": "analysis",
+              "value": "={{ $json.content.parts[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1712,
+        496
+      ],
+      "id": "f3bf0d7f-33d7-4038-a1ab-75cfdbb23290",
+      "name": "Edit Fields2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Search a folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search a folder": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Analyze document",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Analyze an image",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze document": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze an image": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "Message a model1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "8749a83d-8412-4458-ac80-d53c3aeb9ea1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f49159c21ab5a52e4d6290bb1958fd85b4936ef476cf70a200aeb6ab971fce1a"
+  },
+  "nodeGroups": [],
+  "id": "w07BvuPE6OQ42uph",
+  "tags": [
+    {
+      "updatedAt": "2026-06-19T08:04:47.324Z",
+      "createdAt": "2026-06-19T08:04:47.324Z",
+      "id": "JWL4S769DcPBZu2K",
+      "name": "demo"
+    },
+    {
+      "updatedAt": "2026-06-22T07:17:47.924Z",
+      "createdAt": "2026-06-22T07:17:47.924Z",
+      "id": "HHJAeC4fCzwMRkNf",
+      "name": "templates"
+    }
+  ]
+}
